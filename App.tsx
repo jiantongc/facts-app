@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {Alert, Button, StyleSheet, Text, View} from 'react-native';
 import {FlatList, TextInput, TouchableOpacity} from 'react-native-gesture-handler';
 import {Camera} from 'expo-camera';
@@ -7,6 +7,7 @@ import formateDate from 'date-fns/format';
 import {formatDistance} from 'date-fns';
 import * as MediaLibrary from 'expo-media-library';
 import {Snackbar} from 'react-native-paper';
+import {Video} from 'expo-av';
 
 const RANDOM_FACTS = [
   'McDonald’s once made bubblegum-flavored broccoli',
@@ -18,26 +19,25 @@ const RANDOM_FACTS_LEN = RANDOM_FACTS.length;
 
 const DISK_DIR = `${FileSystem.documentDirectory}_secret/`;
 
-const ACCESS_KEY = '55511';
+const ACCESS_KEY = '55510';
 const DELETE_KEY = '78910';
 
 export default function App() {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [_hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [factIndex, setFactIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
-  const [cameraRef, setCameraRef] = useState(null);
+
   const [isPasswordMode, setIsPasswordMode] = useState(false);
   const [isGalleryMode, setIsGalleryMode] = useState(false);
   const [galleryVideos, setGalleryVideos] = useState<object[]>([]);
+  const [activeVideoURI, setActiveVideoURI] = useState<string | null>(null);
   const [snackbarText, setSnackBarText] = useState<string | null>(null);
+  const videoRef = useRef(null);
+  const cameraRef = useRef(null);
 
   useEffect(() => {
     (async () => {
       await createDirectory(); // Ensure directory exists
-
-      setTimeout(async () => {
-        accessGallery();
-      }, 1000);
 
       const {status} = await Camera.requestPermissionsAsync();
       setHasPermission(status === 'granted');
@@ -75,23 +75,28 @@ export default function App() {
   const handleChangeFactClick = () => setFactIndex(factIndex >= RANDOM_FACTS_LEN - 1 ? 0 : factIndex + 1);
 
   const handleActionToggle = async () => {
-    if (!cameraRef) {
+    if (!cameraRef.current) {
       setSnackBarText('No ref!');
       return;
     }
 
     if (isRecording) {
-      cameraRef.stopRecording();
+      cameraRef.current.stopRecording();
       setIsRecording(false); // TODO: Stop recording
       return;
     }
 
-    setIsRecording(true);
-    let video = await cameraRef.recordAsync();
-    await FileSystem.moveAsync({
-      from: video.uri,
-      to: `${DISK_DIR}${Date.now()}.mov`,
-    });
+    try {
+      setIsRecording(true);
+      let video = await cameraRef.current.recordAsync();
+      await FileSystem.moveAsync({
+        from: video.uri,
+        to: `${DISK_DIR}${Date.now()}.mov`,
+      });
+    } catch (e) {
+      setSnackBarText('LIMA');
+      setIsRecording(false);
+    }
     setSnackBarText('Nice');
   };
 
@@ -149,6 +154,8 @@ export default function App() {
     ]);
   };
 
+  const handlePlayVideoClick = (uri: string) => setActiveVideoURI(uri);
+
   const handleExportVideoClick = async (uri: string) => {
     await MediaLibrary.createAssetAsync(uri);
     setSnackBarText('Media exported');
@@ -168,6 +175,25 @@ export default function App() {
   function renderGallery() {
     return (
       <>
+        {activeVideoURI && (
+          <Video
+            ref={videoRef}
+            source={{
+              uri: activeVideoURI,
+            }}
+            useNativeControls
+            resizeMode="contain"
+            isLooping
+            isMuted
+            onLoad={() => videoRef.current.presentFullscreenPlayer()}
+            onFullscreenUpdate={({fullscreenUpdate}) => {
+              if (fullscreenUpdate === Video.FULLSCREEN_UPDATE_PLAYER_DID_DISMISS) {
+                setActiveVideoURI(null);
+              }
+            }}
+          />
+        )}
+
         <View style={styles.main}>
           <FlatList
             data={galleryVideos}
@@ -177,7 +203,7 @@ export default function App() {
                 key={item.id}
                 id={item.id}
                 uri={item.uri}
-                handlePlay={(uri: string) => handleExportVideoClick(uri)}
+                handlePlay={(uri: string) => handlePlayVideoClick(uri)}
                 handleExport={(uri: string) => handleExportVideoClick(uri)}
                 handleDelete={(uri: string) => handleDeleteVideoClick(uri)}
               />
@@ -199,16 +225,20 @@ export default function App() {
           {isPasswordMode && (
             <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} />
           )}
-          {/* <Camera
-          type={Camera.Constants.Type.back}
-          style={styles.viewFinder}
-          videoStabilizationMode={Camera.Constants.VideoStabilization.cinematic} // standard
-          ref={ref => setCameraRef(ref)}
-          onMountError={() => alert('NOT WORKING')}
-        /> */}
+          <Camera
+            type={Camera.Constants.Type.back}
+            style={styles.viewFinder}
+            videoStabilizationMode={Camera.Constants.VideoStabilization.standard} // standard
+            ref={cameraRef}
+            onMountError={() => alert('NOT WORKING')}
+          />
         </View>
         <View style={styles.footer}>
-          <FooterButton onPress={() => setIsPasswordMode(!isPasswordMode)} label="<" />
+          <FooterButton
+            onPress={handleChangeFactClick}
+            onLongPress={() => setIsPasswordMode(!isPasswordMode)}
+            label="<"
+          />
           <TouchableOpacity
             onLongPress={handleActionToggle}
             style={styles.actionButton}
@@ -233,8 +263,8 @@ export default function App() {
   );
 }
 
-const FooterButton = ({onPress, label}: {onPress: () => void; label: string}) => (
-  <TouchableOpacity onPress={onPress}>
+const FooterButton = ({onPress, onLongPress, label}: {onPress: () => void; onLongPress?: () => any; label: string}) => (
+  <TouchableOpacity onPress={onPress} onLongPress={onLongPress}>
     <View style={styles.footerButton}>
       <Text style={styles.footerButtonText}>{label}</Text>
     </View>
@@ -283,11 +313,10 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   viewFinder: {
-    height: 16 * 18,
-    width: 9 * 18,
+    height: 16 * 1,
+    width: 9 * 1,
+    opacity: 0,
     backgroundColor: '#eee',
-    margin: 10,
-    opacity: 1,
     position: 'absolute',
     zIndex: -1,
   },

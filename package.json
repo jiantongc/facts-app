@@ -8,8 +8,11 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-community/netinfo": "5.9.7",
+    "@react-native-community/slider": "3.0.3",
     "date-fns": "^2.19.0",
     "expo": "~40.0.0",
+    "expo-av": "~8.7.0",
     "expo-camera": "^10.0.0",
     "expo-file-system": "~9.3.0",
     "expo-media-library": "~10.0.0",
