@@ -4,9 +4,12 @@
   "expo": {
     "name": "facts-app",
     "slug": "facts-app",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.jiantongc.facts-app"
+    }
   }
 }

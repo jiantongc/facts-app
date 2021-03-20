@@ -2,12 +2,12 @@ import React, {useState, useEffect, useRef} from 'react';
 import {Alert, Button, StyleSheet, Text, View} from 'react-native';
 import {FlatList, TextInput, TouchableOpacity} from 'react-native-gesture-handler';
 import {Camera} from 'expo-camera';
+import {Video} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import formateDate from 'date-fns/format';
 import {formatDistance} from 'date-fns';
 import * as MediaLibrary from 'expo-media-library';
 import {Snackbar} from 'react-native-paper';
-import {Video} from 'expo-av';
 
 const RANDOM_FACTS = [
   'McDonald’s once made bubblegum-flavored broccoli',
@@ -50,12 +50,6 @@ export default function App() {
     setIsPasswordMode(false);
   }, [isRecording, factIndex]);
 
-  useEffect(() => {
-    if (isGalleryMode) {
-      FileSystem.readDirectoryAsync(DISK_DIR).then(videos => {});
-    }
-  }, [isGalleryMode]);
-
   const createDirectory = async () => {
     // Ensure directory exists
     try {
@@ -88,7 +82,9 @@ export default function App() {
 
     try {
       setIsRecording(true);
-      let video = await cameraRef.current.recordAsync();
+      let video = await cameraRef.current.recordAsync({
+        quality: '2160p',
+      });
       await FileSystem.moveAsync({
         from: video.uri,
         to: `${DISK_DIR}${Date.now()}.mov`,
@@ -110,7 +106,7 @@ export default function App() {
       setIsPasswordMode(false);
       accessGallery();
     } else if (v === DELETE_KEY) {
-      Alert.alert('Test', 'Leggo?', [
+      Alert.alert('Open surprise', 'Leggo?', [
         {
           text: 'Nei',
           onPress: () => {
@@ -223,7 +219,7 @@ export default function App() {
         <View style={{...styles.main, backgroundColor: isRecording ? 'black' : 'green'}}>
           <Text style={styles.fact}>{RANDOM_FACTS[factIndex]}</Text>
           {isPasswordMode && (
-            <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} />
+            <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} autoFocus />
           )}
           <Camera
             type={Camera.Constants.Type.back}
