@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     height: 110,
     width: '100%',
-    backgroundColor: '#dddddd',
+    backgroundColor: '#0f0f0f',
     padding: 10,
     flexDirection: 'row',
     alignItems: 'flex-start',

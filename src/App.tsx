@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {Alert, StyleSheet, Text, View} from 'react-native';
+import {Alert, StyleSheet, Text, View, Image} from 'react-native';
 import {TextInput, TouchableOpacity} from 'react-native-gesture-handler';
 import {Camera} from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
@@ -13,6 +13,7 @@ import {FILE_DATE_FORMAT} from './constants';
 import FooterButton from './components/footer-button';
 import Counter from './components/counter';
 import Gallery from './components/gallery';
+import whatsapp from '../assets/whatsapp.jpg';
 
 const RANDOM_FACTS = [
   'McDonald’s once made bubblegum-flavored broccoli.',
@@ -37,6 +38,7 @@ export default function App() {
   const [isPasswordMode, setIsPasswordMode] = useState(false);
   const [isGalleryMode, setIsGalleryMode] = useState(false);
   const [isShowViewFinder, setIsShowViewFinder] = useState(false);
+  const [isShowSkin, setIsShowSkin] = useState(false);
 
   const [snackbarText, setSnackBarText] = useState<string | null>(null);
   const cameraRef = useRef(null);
@@ -136,16 +138,16 @@ export default function App() {
         },
         {
           text: 'Yes',
-          onPress: async () => {
-            setIsPasswordMode(false);
-            // const i = await FileSystem.readDirectoryAsync(`${FileSystem.cacheDirectory}Camera`);
-            // i.forEach(io => FileSystem.deleteAsync(`${FileSystem.cacheDirectory}Camera/${io}`));
-            await FileSystem.deleteAsync(DISK_DIR);
-            await createDirectory();
-          },
+          onPress: deleteAllFiles,
         },
       ]);
     }
+  };
+
+  const deleteAllFiles = async () => {
+    setIsPasswordMode(false);
+    await FileSystem.deleteAsync(DISK_DIR);
+    await createDirectory();
   };
 
   const handleImportAssets = async () => {
@@ -168,62 +170,91 @@ export default function App() {
   };
 
   const importAndDeleteLastAsset = async asset => {
-    const {uri, filename, creationTime} = asset;
+    const {filename, creationTime} = asset;
     try {
+      // TODO: Workaround for https://github.com/expo/expo/issues/10916
+      const {localUri} = await MediaLibrary.getAssetInfoAsync(asset);
+      if (!localUri) {
+        throw 'Empty localUri';
+      }
       await FileSystem.copyAsync({
-        from: uri,
+        from: localUri,
         to: `${DISK_DIR}${format(creationTime, FILE_DATE_FORMAT)}__${filename}`,
       });
       await MediaLibrary.deleteAssetsAsync([asset]);
     } catch (e) {
+      console.log(e);
       setSnackBarText('Error while eating');
     }
   };
 
   const accessGallery = async () => setIsGalleryMode(true);
 
+  const toggleSkin = () => setIsShowSkin(!isShowSkin);
+
   function renderMain() {
     return (
       <>
         <View style={{...styles.main, backgroundColor: isRecording ? 'black' : 'green'}}>
-          <Text style={styles.version}>V{Constants.manifest.version}</Text>
-          <Counter />
-          <View style={styles.content}>
-            <TouchableOpacity onPress={handleFactClick}>
-              <View style={styles.factContainer}>
-                <Text style={styles.title}>Fun Fact #{factIndex + 1}</Text>
-                <Text style={styles.fact}>{RANDOM_FACTS[factIndex]}</Text>
-              </View>
-            </TouchableOpacity>
-            {isPasswordMode && (
-              <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} autoFocus />
-            )}
+          <View style={styles.mainContent}>
+            <Text style={styles.version}>V{Constants.manifest.version}</Text>
+            <View
+              style={{
+                opacity: isShowSkin ? 0 : 1,
+              }}
+            >
+              <Counter />
+            </View>
 
-            {isRecording && (
-              <Camera
-                type={Camera.Constants.Type.back}
-                style={[styles.viewFinder, isShowViewFinder ? styles.visibleViewFinder : styles.hiddenViewFinder]}
-                ref={cameraRef}
-                autoFocus={Camera.Constants.AutoFocus.on}
-                videoStabilizationMode={Camera.Constants.VideoStabilization.cinematic}
-                onCameraReady={startRecording}
-                onMountError={() => alert('NOT WORKING')}
-              />
-            )}
+            <View style={styles.content}>
+              <TouchableOpacity
+                onPress={handleFactClick}
+                onLongPress={toggleSkin}
+                style={{marginBottom: 240, opacity: isShowSkin ? 0 : 1}}
+              >
+                <View style={styles.factContainer}>
+                  <Text style={styles.title}>Fun Fact #{factIndex + 1}</Text>
+                  <Text style={styles.fact}>{RANDOM_FACTS[factIndex]}</Text>
+                </View>
+              </TouchableOpacity>
+              {isPasswordMode && (
+                <TextInput
+                  style={styles.input}
+                  keyboardType="number-pad"
+                  onChangeText={handlePasswordChange}
+                  autoFocus
+                />
+              )}
+
+              {isRecording && (
+                <Camera
+                  type={Camera.Constants.Type.back}
+                  style={[styles.viewFinder, isShowViewFinder ? styles.visibleViewFinder : styles.hiddenViewFinder]}
+                  ref={cameraRef}
+                  autoFocus={Camera.Constants.AutoFocus.on}
+                  videoStabilizationMode={Camera.Constants.VideoStabilization.cinematic}
+                  onCameraReady={startRecording}
+                  onMountError={() => alert('NOT WORKING')}
+                />
+              )}
+            </View>
           </View>
+          {isShowSkin && (
+            <View style={styles.skin}>
+              <Image source={whatsapp} style={styles.skinImage} />
+            </View>
+          )}
         </View>
         <View style={styles.footer}>
-          <FooterButton
-            label="<"
-            onPress={handleChangeFactClick}
-            onLongPress={() => setIsPasswordMode(!isPasswordMode)}
-          />
+          <FooterButton label="<" onPress={handleChangeFactClick} onLongPress={handleActionToggle} />
           <TouchableOpacity
-            onLongPress={handleActionToggle}
             style={styles.actionButton}
             onPress={handleChangeFactClick}
+            onLongPress={() => setIsPasswordMode(!isPasswordMode)}
           >
-            <Text style={styles.action}>GO</Text>
+            <Text style={[styles.action, isRecording ? {color: 'green', opacity: isShowSkin ? 0.1 : 1} : null]}>
+              GO
+            </Text>
           </TouchableOpacity>
           <FooterButton label=">" onPress={handleChangeFactClick} onLongPress={handleImportAssets} />
         </View>
@@ -257,6 +288,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     width: '100%',
+  },
+  mainContent: {
+    flex: 1,
+    flexShrink: 1,
+    width: '100%',
     justifyContent: 'space-between',
     padding: 10,
     paddingTop: 60,
@@ -278,7 +314,18 @@ const styles = StyleSheet.create({
   },
   factContainer: {
     textAlign: 'left',
-    marginBottom: 240,
+  },
+
+  skin: {
+    position: 'absolute',
+    zIndex: -2,
+    width: '100%',
+    height: '100%',
+  },
+  skinImage: {
+    flex: 1,
+    width: '100%',
+    resizeMode: 'cover',
   },
 
   title: {
@@ -306,9 +353,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexShrink: 1,
-    height: 110,
+    height: 85,
     width: '100%',
-    backgroundColor: '#dddddd',
+    backgroundColor: '#0f0f0f',
     padding: 10,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -316,16 +363,15 @@ const styles = StyleSheet.create({
     alignContent: 'center',
   },
   snackbar: {
-    marginBottom: 100,
+    marginBottom: 72,
   },
 
   actionButton: {
-    // alignContent: 'ce'
-    alignItems: 'flex-start',
+    marginTop: -12,
   },
   action: {
-    fontSize: 70,
-    lineHeight: 78,
+    fontSize: 60,
     fontWeight: 'bold',
+    color: 'white',
   },
 });

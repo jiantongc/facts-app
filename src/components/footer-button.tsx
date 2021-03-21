@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
   footerButtonText: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: 'white',
   },
 });
 
