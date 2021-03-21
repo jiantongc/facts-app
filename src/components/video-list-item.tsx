@@ -1,12 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {Button, StyleSheet, Text, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
-import formateDate from 'date-fns/format';
-import {formatDistance} from 'date-fns';
+import formatDate from 'date-fns/format';
+import formatDistance from 'date-fns/formatDistance';
 import * as FileSystem from 'expo-file-system';
 
 const VideoListItem = ({id, uri, handlePlay, handleExport, handleDelete}) => {
-  const date = new Date(Number(id));
+  const d = new Date(Number(id));
+  const date = isNaN(d.valueOf()) ? null : d;
+
   const [size, setSize] = useState('');
   useEffect(() => {
     (async () => {
@@ -22,11 +24,11 @@ const VideoListItem = ({id, uri, handlePlay, handleExport, handleDelete}) => {
   return (
     <View style={styles.videoListItemContainer}>
       <TouchableOpacity onPress={() => handlePlay(uri)}>
-        <View style={styles.videoListItemText}>
+        <View style={styles.videoListItemTextContainer}>
           <Text style={styles.videoListItem}>
-            {formateDate(date, 'dd MMM h:mm a')} <Text style={styles.size}>{size}</Text>
+            {date ? formatDate(date, 'dd MMM h:mm a') : id} <Text style={styles.size}>{size}</Text>
           </Text>
-          <Text style={styles.videoListDetails}>{formatDistance(date, new Date())} ago</Text>
+          {date && <Text style={styles.videoListDetails}>{`${formatDistance(date, new Date())} ago`}</Text>}
         </View>
       </TouchableOpacity>
 
@@ -70,14 +72,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  videoListItemText: {
+  videoListItemTextContainer: {
     flexDirection: 'column',
+    overflow: 'hidden',
+    maxWidth: 270,
+    flex: 1,
   },
   videoListItem: {
-    fontSize: 18,
+    fontSize: 16,
   },
   videoListDetails: {
     marginVertical: 6,
+    color: '#666',
   },
   videoListItemActions: {
     flexDirection: 'row',

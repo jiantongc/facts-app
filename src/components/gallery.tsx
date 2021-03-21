@@ -22,12 +22,15 @@ export default function Gallery({onClose, setSnackBarText, diskDir}) {
     (async () => {
       await MediaLibrary.requestPermissionsAsync();
       const videos = await FileSystem.readDirectoryAsync(diskDir);
+      const d = new Date();
       setGalleryVideos(
         videos
           .map(v => {
+            const fileNameDate = parseDate(v.replace('.mov', ''), FILE_DATE_FORMAT, d);
+            const id = isNaN(fileNameDate.valueOf()) ? v : fileNameDate.getTime().toString();
             return {
               uri: `${diskDir}${v}`,
-              id: parseDate(v.replace('.mov', ''), FILE_DATE_FORMAT, new Date()).getTime().toString(),
+              id,
             };
           })
           .sort(({id: idA}, {id: idB}) => (idB < idA ? -1 : 1)),
@@ -108,6 +111,7 @@ export default function Gallery({onClose, setSnackBarText, diskDir}) {
           resizeMode="contain"
           isLooping
           isMuted
+          shouldPlay
           onLoad={() => videoRef.current.presentFullscreenPlayer()}
           onFullscreenUpdate={({fullscreenUpdate}) => {
             if (fullscreenUpdate === Video.FULLSCREEN_UPDATE_PLAYER_DID_DISMISS) {

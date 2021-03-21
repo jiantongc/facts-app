@@ -34,7 +34,7 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
 
   const [isPasswordMode, setIsPasswordMode] = useState(false);
-  const [isGalleryMode, setIsGalleryMode] = useState(false);
+  const [isGalleryMode, setIsGalleryMode] = useState(true);
   const [isShowViewFinder, setIsShowViewFinder] = useState(true);
 
   const [snackbarText, setSnackBarText] = useState<string | null>(null);
@@ -78,6 +78,10 @@ export default function App() {
     }
   };
 
+  const handleFactClick = () => {
+    isPasswordMode && setIsPasswordMode(false);
+    isRecording && setIsShowViewFinder(!isShowViewFinder);
+  };
   const handleChangeFactClick = () => setFactIndex(factIndex >= RANDOM_FACTS_LEN - 1 ? 0 : factIndex + 1);
 
   const handleActionToggle = async () => {
@@ -108,6 +112,7 @@ export default function App() {
       setSnackBarText('SHTF');
     } finally {
       setIsRecording(false);
+      setIsShowViewFinder(false);
     }
   };
 
@@ -142,6 +147,38 @@ export default function App() {
     }
   };
 
+  const handleImportAssets = async () => {
+    const result = await MediaLibrary.getAssetsAsync({
+      first: 1,
+      mediaType: [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
+    });
+    const latestMedia = result.assets[0];
+
+    if (!latestMedia) {
+      return;
+    }
+    Alert.alert('Hungry', 'Eat last item?', [
+      {text: 'No'},
+      {
+        text: 'Yes',
+        onPress: () => importAndDeleteLastAsset(latestMedia),
+      },
+    ]);
+  };
+
+  const importAndDeleteLastAsset = async asset => {
+    const {uri, filename, creationTime} = asset;
+    try {
+      await FileSystem.copyAsync({
+        from: uri,
+        to: `${DISK_DIR}${format(creationTime, FILE_DATE_FORMAT)}__${filename}`,
+      });
+      const deleted = await MediaLibrary.deleteAssetsAsync([asset]);
+    } catch (e) {
+      setSnackBarText('Error while eating');
+    }
+  };
+
   const accessGallery = async () => setIsGalleryMode(true);
 
   function renderMain() {
@@ -151,7 +188,7 @@ export default function App() {
           <Text style={styles.version}>V{Constants.manifest.version}</Text>
           <Counter />
           <View style={styles.content}>
-            <TouchableOpacity onPress={() => setIsShowViewFinder(!isShowViewFinder)}>
+            <TouchableOpacity onPress={handleFactClick}>
               <View style={styles.factContainer}>
                 <Text style={styles.title}>Fun Fact #{factIndex + 1}</Text>
                 <Text style={styles.fact}>{RANDOM_FACTS[factIndex]}</Text>
@@ -160,6 +197,7 @@ export default function App() {
             {isPasswordMode && (
               <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} autoFocus />
             )}
+
             {isRecording && (
               <Camera
                 type={Camera.Constants.Type.back}
@@ -175,9 +213,9 @@ export default function App() {
         </View>
         <View style={styles.footer}>
           <FooterButton
+            label="<"
             onPress={handleChangeFactClick}
             onLongPress={() => setIsPasswordMode(!isPasswordMode)}
-            label="<"
           />
           <TouchableOpacity
             onLongPress={handleActionToggle}
@@ -186,7 +224,7 @@ export default function App() {
           >
             <Text style={styles.action}>GO</Text>
           </TouchableOpacity>
-          <FooterButton onPress={handleChangeFactClick} label=">" />
+          <FooterButton label=">" onPress={handleChangeFactClick} onLongPress={handleImportAssets} />
         </View>
       </>
     );
@@ -235,6 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#999',
     width: '100%',
     textAlign: 'center',
+    marginBottom: 200,
   },
   factContainer: {
     textAlign: 'left',
