@@ -9,6 +9,8 @@ import {format} from 'date-fns';
 import Gallery from './components/gallery';
 import FooterButton from './components/footer-button';
 import {FILE_DATE_FORMAT} from './constants';
+import {useKeepAwake} from 'expo-keep-awake';
+import Constants from 'expo-constants';
 
 const RANDOM_FACTS = [
   'McDonald’s once made bubblegum-flavored broccoli',
@@ -36,6 +38,8 @@ export default function App() {
 
   const [snackbarText, setSnackBarText] = useState<string | null>(null);
   const cameraRef = useRef(null);
+
+  useKeepAwake();
 
   useEffect(() => {
     (async () => {
@@ -143,6 +147,7 @@ export default function App() {
     return (
       <>
         <View style={{...styles.main, backgroundColor: isRecording ? 'black' : 'green'}}>
+          <Text style={styles.version}>V{Constants.manifest.version}</Text>
           <TouchableOpacity onPress={() => setIsShowViewFinder(!isShowViewFinder)}>
             <View style={styles.factContainer}>
               <Text style={styles.title}>Fun Fact #{factIndex + 1}</Text>
@@ -157,6 +162,8 @@ export default function App() {
               type={Camera.Constants.Type.back}
               style={[styles.viewFinder, isShowViewFinder ? styles.visibleViewFinder : styles.hiddenViewFinder]}
               ref={cameraRef}
+              autoFocus={Camera.Constants.AutoFocus.on}
+              videoStabilizationMode={Camera.Constants.VideoStabilization.cinematic}
               onCameraReady={startRecording}
               onMountError={() => alert('NOT WORKING')}
             />
@@ -173,7 +180,7 @@ export default function App() {
             style={styles.actionButton}
             onPress={handleChangeFactClick}
           >
-            <Text style={styles.action}>+++</Text>
+            <Text style={styles.action}>GO</Text>
           </TouchableOpacity>
           <FooterButton onPress={handleChangeFactClick} label=">" />
         </View>
@@ -207,8 +214,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     width: '100%',
-    alignItems: 'center',
     justifyContent: 'center',
+    padding: 10,
     paddingTop: 60,
   },
   input: {
@@ -220,8 +227,14 @@ const styles = StyleSheet.create({
   },
   factContainer: {
     marginBottom: 100,
-    padding: 10,
     textAlign: 'left',
+  },
+  version: {
+    color: 'white',
+    position: 'absolute',
+    top: 100,
+    left: 10,
+    fontSize: 14,
   },
   title: {
     color: 'white',

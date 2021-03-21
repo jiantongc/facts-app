@@ -5,7 +5,6 @@ import {Video} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import {parse as parseDate} from 'date-fns';
-import {useKeepAwake} from 'expo-keep-awake';
 
 import VideoListItem, {getFileSizeString} from './video-list-item';
 import FooterButton from './footer-button';
@@ -18,7 +17,6 @@ export default function Gallery({onClose, setSnackBarText, diskDir}) {
   const [size, setSize] = useState('');
 
   const videoRef = useRef(null);
-  useKeepAwake();
 
   useEffect(() => {
     (async () => {
