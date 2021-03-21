@@ -5,13 +5,14 @@ import {Camera} from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import {Snackbar} from 'react-native-paper';
-import {format} from 'date-fns';
-import Gallery from './components/gallery';
-import FooterButton from './components/footer-button';
-import {FILE_DATE_FORMAT} from './constants';
+import format from 'date-fns/format';
 import {useKeepAwake} from 'expo-keep-awake';
 import Constants from 'expo-constants';
+
+import {FILE_DATE_FORMAT} from './constants';
+import FooterButton from './components/footer-button';
 import Counter from './components/counter';
+import Gallery from './components/gallery';
 
 const RANDOM_FACTS = [
   'McDonald’s once made bubblegum-flavored broccoli.',

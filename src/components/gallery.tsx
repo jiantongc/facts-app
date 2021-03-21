@@ -4,7 +4,7 @@ import {FlatList} from 'react-native-gesture-handler';
 import {Video} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import {parse as parseDate} from 'date-fns';
+import parseDate from 'date-fns/parse';
 
 import VideoListItem, {getFileSizeString} from './video-list-item';
 import FooterButton from './footer-button';
