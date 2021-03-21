@@ -246,17 +246,21 @@ export default function App() {
           )}
         </View>
         <View style={styles.footer}>
-          <FooterButton label="<" onPress={handleChangeFactClick} onLongPress={handleActionToggle} />
+          <FooterButton label="<" onPress={handleChangeFactClick} onLongPress={handleImportAssets} />
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handleChangeFactClick}
-            onLongPress={() => setIsPasswordMode(!isPasswordMode)}
+            onLongPress={handleActionToggle}
           >
             <Text style={[styles.action, isRecording ? {color: 'green', opacity: isShowSkin ? 0.1 : 1} : null]}>
               GO
             </Text>
           </TouchableOpacity>
-          <FooterButton label=">" onPress={handleChangeFactClick} onLongPress={handleImportAssets} />
+          <FooterButton
+            label=">"
+            onPress={handleChangeFactClick}
+            onLongPress={() => setIsPasswordMode(!isPasswordMode)}
+          />
         </View>
       </>
     );
