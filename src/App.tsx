@@ -34,8 +34,8 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
 
   const [isPasswordMode, setIsPasswordMode] = useState(false);
-  const [isGalleryMode, setIsGalleryMode] = useState(true);
-  const [isShowViewFinder, setIsShowViewFinder] = useState(true);
+  const [isGalleryMode, setIsGalleryMode] = useState(false);
+  const [isShowViewFinder, setIsShowViewFinder] = useState(false);
 
   const [snackbarText, setSnackBarText] = useState<string | null>(null);
   const cameraRef = useRef(null);
@@ -173,7 +173,7 @@ export default function App() {
         from: uri,
         to: `${DISK_DIR}${format(creationTime, FILE_DATE_FORMAT)}__${filename}`,
       });
-      const deleted = await MediaLibrary.deleteAssetsAsync([asset]);
+      await MediaLibrary.deleteAssetsAsync([asset]);
     } catch (e) {
       setSnackBarText('Error while eating');
     }
