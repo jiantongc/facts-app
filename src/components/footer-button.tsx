@@ -2,8 +2,18 @@ import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 
-const FooterButton = ({onPress, onLongPress, label}: {onPress: () => void; onLongPress?: () => any; label: string}) => (
-  <TouchableOpacity onPress={onPress} onLongPress={onLongPress}>
+const FooterButton = ({
+  onPress,
+  onLongPress,
+  label,
+  disabled,
+}: {
+  onPress: () => void;
+  onLongPress?: () => any;
+  label: string;
+  disabled?: boolean;
+}) => (
+  <TouchableOpacity onPress={onPress} onLongPress={onLongPress} disabled={disabled}>
     <View style={styles.footerButton}>
       <Text style={styles.footerButtonText}>{label}</Text>
     </View>
@@ -15,7 +25,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   footerButtonText: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
   },
 });

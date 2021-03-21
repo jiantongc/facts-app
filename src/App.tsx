@@ -11,12 +11,13 @@ import FooterButton from './components/footer-button';
 import {FILE_DATE_FORMAT} from './constants';
 import {useKeepAwake} from 'expo-keep-awake';
 import Constants from 'expo-constants';
+import Counter from './components/counter';
 
 const RANDOM_FACTS = [
-  'McDonald’s once made bubblegum-flavored broccoli',
-  'Some fungi create zombies, then control their minds',
-  'The first oranges weren’t orange',
-  'There’s only one letter that doesn’t appear in any U.S. state name',
+  'McDonald’s once made bubblegum-flavored broccoli.',
+  'Some fungi create zombies, then control their minds.',
+  'The first oranges weren’t orange.',
+  'There’s only one letter that doesn’t appear in any U.S. state name.',
   'The world wastes about 1 billion metric tons of food each year.',
   'Hair and nails grow faster during pregnancy.',
 ];
@@ -148,26 +149,29 @@ export default function App() {
       <>
         <View style={{...styles.main, backgroundColor: isRecording ? 'black' : 'green'}}>
           <Text style={styles.version}>V{Constants.manifest.version}</Text>
-          <TouchableOpacity onPress={() => setIsShowViewFinder(!isShowViewFinder)}>
-            <View style={styles.factContainer}>
-              <Text style={styles.title}>Fun Fact #{factIndex + 1}</Text>
-              <Text style={styles.fact}>{RANDOM_FACTS[factIndex]}</Text>
-            </View>
-          </TouchableOpacity>
-          {isPasswordMode && (
-            <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} autoFocus />
-          )}
-          {isRecording && (
-            <Camera
-              type={Camera.Constants.Type.back}
-              style={[styles.viewFinder, isShowViewFinder ? styles.visibleViewFinder : styles.hiddenViewFinder]}
-              ref={cameraRef}
-              autoFocus={Camera.Constants.AutoFocus.on}
-              videoStabilizationMode={Camera.Constants.VideoStabilization.cinematic}
-              onCameraReady={startRecording}
-              onMountError={() => alert('NOT WORKING')}
-            />
-          )}
+          <Counter />
+          <View style={styles.content}>
+            <TouchableOpacity onPress={() => setIsShowViewFinder(!isShowViewFinder)}>
+              <View style={styles.factContainer}>
+                <Text style={styles.title}>Fun Fact #{factIndex + 1}</Text>
+                <Text style={styles.fact}>{RANDOM_FACTS[factIndex]}</Text>
+              </View>
+            </TouchableOpacity>
+            {isPasswordMode && (
+              <TextInput style={styles.input} keyboardType="number-pad" onChangeText={handlePasswordChange} autoFocus />
+            )}
+            {isRecording && (
+              <Camera
+                type={Camera.Constants.Type.back}
+                style={[styles.viewFinder, isShowViewFinder ? styles.visibleViewFinder : styles.hiddenViewFinder]}
+                ref={cameraRef}
+                autoFocus={Camera.Constants.AutoFocus.on}
+                videoStabilizationMode={Camera.Constants.VideoStabilization.cinematic}
+                onCameraReady={startRecording}
+                onMountError={() => alert('NOT WORKING')}
+              />
+            )}
+          </View>
         </View>
         <View style={styles.footer}>
           <FooterButton
@@ -214,9 +218,16 @@ const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     width: '100%',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     padding: 10,
     paddingTop: 60,
+  },
+  version: {
+    color: 'white',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
   },
   input: {
     color: 'white',
@@ -226,16 +237,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   factContainer: {
-    marginBottom: 100,
     textAlign: 'left',
+    marginBottom: 240,
   },
-  version: {
-    color: 'white',
-    position: 'absolute',
-    top: 100,
-    left: 10,
-    fontSize: 14,
-  },
+
   title: {
     color: 'white',
     fontSize: 20,
@@ -261,7 +266,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexShrink: 1,
-    height: 120,
+    height: 110,
     width: '100%',
     backgroundColor: '#dddddd',
     padding: 10,
@@ -279,8 +284,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   action: {
-    fontSize: 80,
-    lineHeight: 80,
+    fontSize: 70,
+    lineHeight: 78,
     fontWeight: 'bold',
   },
 });

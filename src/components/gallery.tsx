@@ -134,7 +134,7 @@ export default function Gallery({onClose, setSnackBarText, diskDir}) {
         />
       </View>
       <View style={styles.footer}>
-        <FooterButton onPress={handleExportAllClick} label={`Out All (${size})`} />
+        <FooterButton disabled={!galleryVideos.length} onPress={handleExportAllClick} label={`Out All (${size})`} />
         <FooterButton onPress={onClose} label="X" />
       </View>
     </View>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
 
   footer: {
     flexShrink: 1,
-    height: 120,
+    height: 110,
     width: '100%',
     backgroundColor: '#dddddd',
     padding: 10,
