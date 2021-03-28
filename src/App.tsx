@@ -252,7 +252,7 @@ export default function App() {
             onPress={handleChangeFactClick}
             onLongPress={handleActionToggle}
           >
-            <Text style={[styles.action, isRecording ? {color: 'green', opacity: isShowSkin ? 0.1 : 1} : null]}>
+            <Text style={[styles.action, {opacity: isShowSkin ? 0.1 : 1}, isRecording ? {color: 'green'} : null]}>
               GO
             </Text>
           </TouchableOpacity>

@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {Alert, StyleSheet, View} from 'react-native';
+import {Alert, StyleSheet, View, AppState, AppStateStatus} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 import {Video} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -17,6 +17,20 @@ export default function Gallery({onClose, setSnackBarText, diskDir}) {
   const [size, setSize] = useState('');
 
   const videoRef = useRef(null);
+
+  useEffect(() => {
+    AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      AppState.removeEventListener('change', handleAppStateChange);
+    };
+  }, []);
+
+  const handleAppStateChange = (nextAppState: AppStateStatus) => {
+    const goingBackground = nextAppState.match(/inactive|background/);
+    if (goingBackground) {
+      videoRef.current?.dismissFullscreenPlayer?.();
+    }
+  };
 
   useEffect(() => {
     (async () => {
